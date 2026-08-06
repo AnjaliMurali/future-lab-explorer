@@ -52,9 +52,10 @@ export function ParticleField({ density = 60 }: { density?: number }) {
       }
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
-          const a = particles[i];
-          const b = particles[j];
+          const a = particles[i]!;
+          const b = particles[j]!;
           const d = Math.hypot(a.x - b.x, a.y - b.y);
+
           if (d < 130) {
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
