@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LabRouteImport } from './routes/lab'
+import { Route as ExperimentsRocketRouteImport } from './routes/experiments.rocket'
+import { Route as ExperimentsVolcanoRouteImport } from './routes/experiments.volcano'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,31 +24,49 @@ const LabRoute = LabRouteImport.update({
   path: '/lab',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ExperimentsRocketRoute = ExperimentsRocketRouteImport.update({
+  id: '/experiments/rocket',
+  path: '/experiments/rocket',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExperimentsVolcanoRoute = ExperimentsVolcanoRouteImport.update({
+  id: '/experiments/volcano',
+  path: '/experiments/volcano',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/lab': typeof LabRoute
+  '/experiments/rocket': typeof ExperimentsRocketRoute
+  '/experiments/volcano': typeof ExperimentsVolcanoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/lab': typeof LabRoute
+  '/experiments/rocket': typeof ExperimentsRocketRoute
+  '/experiments/volcano': typeof ExperimentsVolcanoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/lab': typeof LabRoute
+  '/experiments/rocket': typeof ExperimentsRocketRoute
+  '/experiments/volcano': typeof ExperimentsVolcanoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/lab'
+  fullPaths: '/' | '/lab' | '/experiments/rocket' | '/experiments/volcano'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/lab'
-  id: '__root__' | '/' | '/lab'
+  to: '/' | '/lab' | '/experiments/rocket' | '/experiments/volcano'
+  id: '__root__' | '/' | '/lab' | '/experiments/rocket' | '/experiments/volcano'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LabRoute: typeof LabRoute
+  ExperimentsRocketRoute: typeof ExperimentsRocketRoute
+  ExperimentsVolcanoRoute: typeof ExperimentsVolcanoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +85,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LabRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/experiments/rocket': {
+      id: '/experiments/rocket'
+      path: '/experiments/rocket'
+      fullPath: '/experiments/rocket'
+      preLoaderRoute: typeof ExperimentsRocketRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/experiments/volcano': {
+      id: '/experiments/volcano'
+      path: '/experiments/volcano'
+      fullPath: '/experiments/volcano'
+      preLoaderRoute: typeof ExperimentsVolcanoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LabRoute: LabRoute,
+  ExperimentsRocketRoute: ExperimentsRocketRoute,
+  ExperimentsVolcanoRoute: ExperimentsVolcanoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
