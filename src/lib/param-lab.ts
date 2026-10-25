@@ -73,10 +73,10 @@ export type ParamSpec = {
 };
 
 export function zoneAt(zones: Zone[], value: number): Zone {
-  return (
-    zones.find((z) => value >= z.from && value <= z.to) ??
-    zones[value < zones[0].from ? 0 : zones.length - 1]
-  );
+  const first = zones[0];
+  if (!first) throw new Error("A parameter must define at least one zone");
+  return zones.find(z => value >= z.from && value <= z.to)
+    ?? (value < first.from ? first : zones[zones.length - 1] ?? first);
 }
 
 export function rangeText(zones: Zone[], tone: ZoneTone, unit?: string) {
@@ -130,7 +130,7 @@ export function useParamLab() {
       key: spec.key,
       label: spec.label,
       icon: spec.icon,
-      unit: spec.unit,
+      ...(spec.unit ? { unit: spec.unit } : {}),
       from,
       to,
       direction,

@@ -15,6 +15,8 @@ export const Route = createFileRoute("/")({
           "Perform impossible experiments in a futuristic virtual laboratory: volcanoes, rocket launches, gravity chambers and wind turbines with real physics.",
       },
       { property: "og:title", content: "Future Science Lab — Interactive Science for Kids" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       {
         property: "og:description",
         content:

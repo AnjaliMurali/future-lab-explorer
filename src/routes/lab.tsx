@@ -13,6 +13,8 @@ export const Route = createFileRoute("/lab")({
           "Step into ten futuristic science rooms — Earth, Space, Physics, Energy, Biology and more — and launch interactive experiments.",
       },
       { property: "og:title", content: "Virtual Science Laboratory" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       {
         property: "og:description",
         content: "Ten holographic science rooms full of interactive equipment.",

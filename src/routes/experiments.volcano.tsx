@@ -204,7 +204,11 @@ function VolcanoPage() {
   const lab = useParamLab();
   const runs = useRuns();
   const specs = useMemo(() => buildSpecs(objective), [objective]);
-  const specOf = (k: string) => specs.find((s) => s.key === k)!;
+  const specOf = (k: string) => {
+    const spec = specs.find(s => s.key === k);
+    if (!spec) throw new Error(`Unknown parameter: ${k}`);
+    return spec;
+  };
   const values: Record<string, number> = { temp, viscosity, pressure, crater };
   const setters: Record<string, (v: number) => void> = {
     temp: setTemp,
@@ -391,8 +395,8 @@ function VolcanoPage() {
     };
   }, []);
 
-  const lastSpec = lab.last ? specs.find((s) => s.key === lab.last!.key) : undefined;
   const shown = lab.selected ?? lab.last;
+  const lastSpec = specs.find(s => s.key === shown?.key);
 
   const coach =
     explosivity > 75 && objective !== "plinian"
@@ -451,8 +455,8 @@ function VolcanoPage() {
                   <ZoneSlider
                     key={s.key}
                     spec={s}
-                    value={values[s.key]}
-                    onChange={setters[s.key]}
+                    value={values[s.key] ?? s.suggested}
+                    onChange={v => setters[s.key]?.(v)}
                     onCommit={(from, to) => lab.record(s, from, to)}
                   />
                 ))}
@@ -620,17 +624,18 @@ function VolcanoPage() {
             />
 
             <BestSettings
+              hasAttempt={runs.runs.length > 0 || erupting}
               specs={specs}
               values={values}
               onApplyAll={() =>
                 specs.forEach((s) => {
-                  lab.record(s, values[s.key], s.suggested);
-                  setters[s.key](s.suggested);
+                  lab.record(s, values[s.key] ?? s.suggested, s.suggested);
+                  setters[s.key]?.(s.suggested);
                 })
               }
               onApplyOne={(key) => {
                 const s = specOf(key);
-                lab.record(s, values[key], s.suggested);
+                lab.record(s, values[key] ?? s.suggested, s.suggested);
                 setters[key](s.suggested);
               }}
               expectedImprovement="Roughly 15–25% closer to your objective in this simulation model."
@@ -676,7 +681,13 @@ function VolcanoPage() {
 
             <ParameterTimeline
               history={lab.history}
-              onReplay={lab.replay}
+              onReplay={id => {
+                const event = lab.history.find(e => e.id === id);
+                if (!event) return;
+                if (typeof event.to === "number") setters[event.key]?.(event.to);
+                if (event.key === "rock" && (event.to === "basalt" || event.to === "andesite" || event.to === "rhyolite")) setRock(event.to);
+                lab.replay(id);
+              }}
               activeId={lab.selected?.id ?? null}
             />
 

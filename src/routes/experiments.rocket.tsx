@@ -225,7 +225,11 @@ function RocketPage() {
   const lab = useParamLab();
   const runs = useRuns();
   const specs = useMemo(() => buildSpecs(mission), [mission]);
-  const specOf = (k: string) => specs.find((s) => s.key === k)!;
+  const specOf = (k: string) => {
+    const spec = specs.find(s => s.key === k);
+    if (!spec) throw new Error(`Unknown parameter: ${k}`);
+    return spec;
+  };
   const values: Record<string, number> = { thrust, fuel, payload, angle, wind };
   const setters: Record<string, (v: number) => void> = {
     thrust: setThrust,
@@ -337,7 +341,7 @@ function RocketPage() {
         t: Math.round(t * 10) / 10,
         stage,
       });
-      if (points.length === 0 || t - points[points.length - 1].t > 0.3) {
+      if (points.length === 0 || t - (points[points.length - 1]?.t ?? 0) > 0.3) {
         points.push({ t: Math.round(t * 10) / 10, alt: Math.round(alt), vel: Math.round(vel) });
         setTrack([...points]);
       }
@@ -370,8 +374,8 @@ function RocketPage() {
   const altPct = Math.min(100, (tel.alt / target) * 100);
   const flameScale = 0.6 + (thrust / 100) * 1.6;
   const stars = Math.max(1, Math.min(5, Math.round(successChance / 20)));
-  const lastSpec = lab.last ? specs.find((s) => s.key === lab.last!.key) : undefined;
   const shown = lab.selected ?? lab.last;
+  const lastSpec = specs.find(s => s.key === shown?.key);
 
   const coach =
     predictedAlt > target * 1.3
@@ -471,8 +475,8 @@ function RocketPage() {
                   <ZoneSlider
                     key={s.key}
                     spec={s}
-                    value={values[s.key]}
-                    onChange={setters[s.key]}
+                    value={values[s.key] ?? s.suggested}
+                    onChange={v => setters[s.key]?.(v)}
                     onCommit={(from, to) => lab.record(s, from, to)}
                   />
                 ))}
@@ -698,17 +702,18 @@ function RocketPage() {
             />
 
             <BestSettings
+              hasAttempt={runs.runs.length > 0 || result !== null}
               specs={specs}
               values={values}
               onApplyAll={() =>
                 specs.forEach((s) => {
-                  lab.record(s, values[s.key], s.suggested);
-                  setters[s.key](s.suggested);
+                  lab.record(s, values[s.key] ?? s.suggested, s.suggested);
+                  setters[s.key]?.(s.suggested);
                 })
               }
               onApplyOne={(key) => {
                 const s = specOf(key);
-                lab.record(s, values[key], s.suggested);
+                lab.record(s, values[key] ?? s.suggested, s.suggested);
                 setters[key](s.suggested);
               }}
               expectedImprovement="Around 10–20% better mission efficiency in this simulation model."
@@ -724,7 +729,13 @@ function RocketPage() {
 
             <ParameterTimeline
               history={lab.history}
-              onReplay={lab.replay}
+              onReplay={id => {
+                const event = lab.history.find(e => e.id === id);
+                if (!event) return;
+                if (typeof event.to === "number") setters[event.key]?.(event.to);
+                if (event.key === "engine" && (event.to === "kerolox" || event.to === "hydrolox" || event.to === "solid")) setEngine(event.to);
+                lab.replay(id);
+              }}
               activeId={lab.selected?.id ?? null}
             />
           </div>

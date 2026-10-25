@@ -45,8 +45,8 @@ export function WhatChangedPanel({
   suggestionText,
 }: {
   event: ChangeEvent | null;
-  spec?: ParamSpec;
-  currentValue?: number;
+  spec?: ParamSpec | undefined;
+  currentValue?: number | undefined;
   suggestionText?: string;
 }) {
   if (!event) {
@@ -457,7 +457,7 @@ export function ModeSwitch({
     { key: "guided", label: "Guided", icon: "🧭", blurb: "The science coach gives you hints as you go." },
     { key: "challenge", label: "Challenge", icon: "🎯", blurb: challenge },
   ];
-  const active = modes.find((m) => m.key === mode)!;
+  const active = modes.find((m) => m.key === mode) ?? modes[0];
   return (
     <Panel eyebrow="Simulation mode" title={`${active.icon} ${active.label} Mode`}>
       <div className="flex flex-wrap gap-2">
@@ -654,6 +654,7 @@ export function ResultScorecard({
 /* ---------------- Best settings assistant ---------------- */
 
 export function BestSettings({
+  hasAttempt = true,
   specs,
   values,
   onApplyAll,
@@ -661,6 +662,7 @@ export function BestSettings({
   expectedImprovement,
   why,
 }: {
+  hasAttempt?: boolean;
   specs: ParamSpec[];
   values: Record<string, number>;
   onApplyAll: () => void;
@@ -679,10 +681,11 @@ export function BestSettings({
           </p>
           <button
             type="button"
+            disabled={!hasAttempt}
             onClick={() => setOpen(true)}
             className="mt-3 rounded-full bg-accent px-4 py-2 font-display text-xs tracking-widest text-accent-foreground uppercase neon-ring"
           >
-            Show me how to improve
+            {hasAttempt ? "Show me how to improve" : "Save an attempt first"}
           </button>
         </>
       ) : (
@@ -698,7 +701,7 @@ export function BestSettings({
             </thead>
             <tbody>
               {specs.map((s) => {
-                const v = values[s.key];
+                const v = values[s.key] ?? s.suggested;
                 const same = v === s.suggested;
                 const tone = ZONE_META[verdict(s, v).zone.tone];
                 return (

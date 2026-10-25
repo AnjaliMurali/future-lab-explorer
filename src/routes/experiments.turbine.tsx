@@ -225,7 +225,11 @@ function TurbinePage() {
   const lab = useParamLab();
   const runs = useRuns();
   const specs = useMemo(() => buildSpecs(goal), [goal]);
-  const specOf = (k: string) => specs.find((s) => s.key === k)!;
+  const specOf = (k: string) => {
+    const spec = specs.find(s => s.key === k);
+    if (!spec) throw new Error(`Unknown parameter: ${k}`);
+    return spec;
+  };
   const values: Record<string, number> = { blade, angle, windSpeed, generator, tower };
   const setters: Record<string, (v: number) => void> = {
     blade: setBlade,
@@ -287,8 +291,8 @@ function TurbinePage() {
     [angle, windSpeed, tower, generator, shapeCp],
   );
 
-  const lastSpec = lab.last ? specs.find((s) => s.key === lab.last!.key) : undefined;
   const shown = lab.selected ?? lab.last;
+  const lastSpec = specs.find(s => s.key === shown?.key);
 
   const coach =
     angle > 40 || angle < 18
@@ -361,8 +365,8 @@ function TurbinePage() {
                   <ZoneSlider
                     key={s.key}
                     spec={s}
-                    value={values[s.key]}
-                    onChange={setters[s.key]}
+                    value={values[s.key] ?? s.suggested}
+                    onChange={v => setters[s.key]?.(v)}
                     onCommit={(from, to) => lab.record(s, from, to)}
                   />
                 ))}
@@ -556,17 +560,18 @@ function TurbinePage() {
             />
 
             <BestSettings
+              hasAttempt={runs.runs.length > 0}
               specs={specs}
               values={values}
               onApplyAll={() =>
                 specs.forEach((s) => {
-                  lab.record(s, values[s.key], s.suggested);
-                  setters[s.key](s.suggested);
+                  lab.record(s, values[s.key] ?? s.suggested, s.suggested);
+                  setters[s.key]?.(s.suggested);
                 })
               }
               onApplyOne={(key) => {
                 const s = specOf(key);
-                lab.record(s, values[key], s.suggested);
+                lab.record(s, values[key] ?? s.suggested, s.suggested);
                 setters[key](s.suggested);
               }}
               expectedImprovement="Approximately 12% better efficiency in this simulation model."
@@ -582,7 +587,13 @@ function TurbinePage() {
 
             <ParameterTimeline
               history={lab.history}
-              onReplay={lab.replay}
+              onReplay={id => {
+                const event = lab.history.find(e => e.id === id);
+                if (!event) return;
+                if (typeof event.to === "number") setters[event.key]?.(event.to);
+                if (event.key === "shape" && (event.to === "flat" || event.to === "curved" || event.to === "twisted")) setShape(event.to);
+                lab.replay(id);
+              }}
               activeId={lab.selected?.id ?? null}
             />
 
