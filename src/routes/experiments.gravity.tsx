@@ -54,7 +54,7 @@ function GravityPage() {
   const apply = (key: string) => {
     const spec = specs.find(s => s.key === key);
     if (!spec) return;
-    lab.record(spec, values[key], spec.suggested);
+    lab.record(spec, values[key] ?? spec.suggested, spec.suggested);
     setValue(key, spec.suggested);
   };
   const snapshot = (): Omit<Run, "name"> => ({
@@ -74,7 +74,7 @@ function GravityPage() {
     specs.forEach(s => {
       const value = Number(run.params.find(p => p.label === s.label)?.value);
       if (!Number.isFinite(value)) return;
-      lab.record(s, values[s.key], value);
+      lab.record(s, values[s.key] ?? s.suggested, value);
       setValue(s.key, value);
     });
   };
@@ -186,7 +186,7 @@ function GravityPage() {
                   if (spec) lab.record(spec, g, nextG);
                   setPlanet(next);
                 }} options={(Object.keys(PLANETS) as PlanetKey[]).map(k => ({ value: k, label: PLANETS[k].label }))} />
-                {specs.map(spec => <ZoneSlider key={spec.key} spec={spec} value={values[spec.key]} onChange={v => setValue(spec.key, v)} onCommit={(from, to) => lab.record(spec, from, to)} />)}
+                {specs.map(spec => <ZoneSlider key={spec.key} spec={spec} value={values[spec.key] ?? spec.suggested} onChange={v => setValue(spec.key, v)} onCommit={(from, to) => lab.record(spec, from, to)} />)}
               </div>
             </Panel>
             <ModeSwitch mode={mode} onChange={setMode} challenge="Match your mission's gravity with a 40 kg explorer and a 200 N·s push. Compare two attempts." />

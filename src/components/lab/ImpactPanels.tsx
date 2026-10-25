@@ -45,8 +45,8 @@ export function WhatChangedPanel({
   suggestionText,
 }: {
   event: ChangeEvent | null;
-  spec?: ParamSpec;
-  currentValue?: number;
+  spec?: ParamSpec | undefined;
+  currentValue?: number | undefined;
   suggestionText?: string;
 }) {
   if (!event) {
@@ -701,7 +701,7 @@ export function BestSettings({
             </thead>
             <tbody>
               {specs.map((s) => {
-                const v = values[s.key];
+                const v = values[s.key] ?? s.suggested;
                 const same = v === s.suggested;
                 const tone = ZONE_META[verdict(s, v).zone.tone];
                 return (
